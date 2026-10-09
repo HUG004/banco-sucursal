@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sucursal Bancaria | Nodo 2</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/app.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>Sucursal Bancaria</h1>
+            <p>Sistema Administrativo — Nodo 2</p>
+            <span class="etiqueta">Modo simulación</span>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <section>
+            <h2>Resumen administrativo</h2>
+            <div class="estadisticas">
+                <article class="tarjeta">
+                    <h3>Clientes registrados</h3>
+                    <strong id="totalClientes">0</strong>
+                </article>
+                <article class="tarjeta">
+                    <h3>Transacciones</h3>
+                    <strong id="totalTransacciones">0</strong>
+                </article>
+                <article class="tarjeta">
+                    <h3>Total depósitos</h3>
+                    <strong id="totalDepositos">$0.00</strong>
+                </article>
+                <article class="tarjeta">
+                    <h3>Total retiros</h3>
+                    <strong id="totalRetiros">$0.00</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Registrar nuevo cliente</h2>
+            <form id="formCliente">
+                <label for="nombre">Nombre del titular</label>
+                <input type="text" id="nombre" required
+                       maxlength="100"
+                       placeholder="Ej. Juan Pérez">
+
+                <label for="saldoInicial">Saldo inicial ($)</label>
+                <input type="number" id="saldoInicial"
+                       min="0" step="0.01" required
+                       placeholder="1000">
+
+                <button type="submit">Registrar cuenta</button>
+            </form>
+            <p id="mensajeRegistro" role="status"></p>
+        </section>
+
+        <section class="panel">
+            <div class="titulo-seccion">
+                <h2>Clientes registrados</h2>
+                <button id="actualizarClientes" type="button">
+                    Actualizar
+                </button>
+            </div>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Número de cuenta</th>
+                            <th>Titular</th>
+                            <th>Saldo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaClientes"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="titulo-seccion">
+                <h2>Historial de transacciones</h2>
+                <select id="filtroTipo" aria-label="Filtrar transacciones">
+                    <option value="">Todas</option>
+                    <option value="deposito">Depósitos</option>
+                    <option value="retiro">Retiros</option>
+                    <option value="transferencia">Transferencias</option>
+                </select>
+            </div>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cuenta</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaTransacciones"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        Sistema Bancario Distribuido — Examen Práctico
+    </footer>
+</body>
+</html>
