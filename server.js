@@ -7,6 +7,7 @@ const reportesRoutes = require('./src/routes/reportesRoutes');
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/api/reportes', reportesRoutes);
@@ -24,8 +25,11 @@ app.use('/api/clientes', clientesRoutes);
 
 app.use('/api/transacciones', transaccionesRoutes);
 
-app.listen(PORT, () => {
-    console.log(
-        `Sucursal bancaria ejecutándose en http://localhost:${PORT}`
-    );
-});
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Sucursal bancaria en http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;

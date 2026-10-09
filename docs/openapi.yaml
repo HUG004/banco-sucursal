@@ -1,0 +1,325 @@
+openapi: 3.0.3
+info:
+  title: API de Sucursal Bancaria - Nodo 2
+  version: 0.1.0
+  description: |
+    API REST del Nodo 2 del Sistema Bancario Distribuido.
+    Esta versión utiliza datos simulados en memoria y no está conectada al Banco Central.
+    Los clientes se pierden al reiniciar el servidor. El historial de ejemplo se carga
+    independientemente del registro de clientes; no representa un libro contable real.
+    La autenticación por API Key y la integración con el Banco Central están pendientes.
+servers:
+  - url: http://localhost:3002
+    description: Servidor local de desarrollo
+
+tags:
+  - name: Salud
+  - name: Clientes
+  - name: Transacciones
+  - name: Reportes
+paths:
+  /api/salud:
+    get:
+      tags: [Salud]
+      summary: Verificar estado del servidor
+      operationId: obtenerSalud
+      responses:
+        '200':
+          description: Servidor operativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+  /api/clientes:
+    get:
+      tags: [Clientes]
+      summary: Listar clientes registrados en memoria
+      operationId: listarClientes
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+    post:
+      tags: [Clientes]
+      summary: Registrar un cliente simulado
+      operationId: registrarCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearCliente'
+            example:
+              nombre: Cliente de Prueba
+              saldoInicial: 1000
+      responses:
+        '201':
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroClienteExitoso'
+        '400':
+          $ref: '#/components/responses/Error400'
+  /api/clientes/{id}:
+    get:
+      tags: [Clientes]
+      summary: Obtener cliente por identificador
+      operationId: obtenerClientePorId
+      parameters:
+        - $ref: '#/components/parameters/ClienteId'
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '404':
+          $ref: '#/components/responses/Error404'
+  /api/transacciones:
+    get:
+      tags: [Transacciones]
+      summary: Listar transacciones simuladas
+      operationId: listarTransacciones
+      responses:
+        '200':
+          description: Lista de transacciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaccion'
+  /api/transacciones/cliente/{id}:
+    get:
+      tags: [Transacciones]
+      summary: Consultar historial por cliente
+      operationId: obtenerHistorialCliente
+      parameters:
+        - $ref: '#/components/parameters/ClienteId'
+      responses:
+        '200':
+          description: Historial del cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistorialCliente'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '404':
+          $ref: '#/components/responses/Error404'
+  /api/reportes/resumen:
+    get:
+      tags: [Reportes]
+      summary: Obtener resumen administrativo simulado
+      operationId: obtenerResumen
+      responses:
+        '200':
+          description: Estadísticas de la sucursal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resumen'
+  /api/reportes/transacciones:
+    get:
+      tags: [Reportes]
+      summary: Reporte de transacciones con filtro opcional
+      operationId: reporteTransacciones
+      parameters:
+        - in: query
+          name: tipo
+          required: false
+          schema:
+            type: string
+            enum: [deposito, retiro, transferencia]
+          description: Filtra por tipo de transacción
+      responses:
+        '200':
+          description: Reporte generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteTransacciones'
+        '400':
+          $ref: '#/components/responses/Error400'
+components:
+  parameters:
+    ClienteId:
+      in: path
+      name: id
+      required: true
+      description: Identificador numérico del cliente
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+  responses:
+    Error400:
+      description: Datos o parámetros inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error404:
+      description: Cliente no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Cliente no encontrado
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    Salud:
+      type: object
+      properties:
+        estado:
+          type: string
+          example: OK
+        servicio:
+          type: string
+          example: Nodo 2 - Sucursal Bancaria
+        mensaje:
+          type: string
+          example: Servidor funcionando correctamente
+    CrearCliente:
+      type: object
+      required: [nombre, saldoInicial]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          example: Cliente de Prueba
+        saldoInicial:
+          type: number
+          format: double
+          minimum: 0
+          example: 1000
+    Cliente:
+      type: object
+      required: [id, numeroCuenta, nombre, saldo, estado]
+      properties:
+        id:
+          type: integer
+          example: 1
+        numeroCuenta:
+          type: string
+          example: CTA-0001
+        nombre:
+          type: string
+          example: Cliente de Prueba
+        saldo:
+          type: number
+          format: double
+          example: 1000
+        estado:
+          type: string
+          example: activa
+    RegistroClienteExitoso:
+      type: object
+      properties:
+        mensaje:
+          type: string
+          example: Cliente registrado correctamente (simulación)
+        cliente:
+          $ref: '#/components/schemas/Cliente'
+    Transaccion:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        cuentaId:
+          type: integer
+          example: 1
+        tipo:
+          type: string
+          enum: [deposito, retiro, transferencia]
+          example: deposito
+        monto:
+          type: number
+          format: double
+          example: 1000
+        sucursalId:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          format: date-time
+          example: '2026-10-09T18:36:00.340Z'
+        descripcion:
+          type: string
+          example: Apertura de cuenta (simulación)
+    HistorialCliente:
+      type: object
+      properties:
+        cliente:
+          type: string
+          example: Cliente de Prueba
+        numeroCuenta:
+          type: string
+          example: CTA-0001
+        totalTransacciones:
+          type: integer
+          example: 1
+        transacciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaccion'
+    Resumen:
+      type: object
+      properties:
+        sucursal:
+          type: string
+          example: Sucursal Bancaria - Nodo 2
+        modo:
+          type: string
+          example: simulacion
+        totalClientes:
+          type: integer
+          example: 1
+        totalTransacciones:
+          type: integer
+          example: 1
+        cantidadDepositos:
+          type: integer
+          example: 1
+        cantidadRetiros:
+          type: integer
+          example: 0
+        totalDepositos:
+          type: number
+          example: 1000
+        totalRetiros:
+          type: number
+          example: 0
+        fechaReporte:
+          type: string
+          format: date-time
+    ReporteTransacciones:
+      type: object
+      properties:
+        sucursal:
+          type: string
+          example: Sucursal Bancaria - Nodo 2
+        modo:
+          type: string
+          example: simulacion
+        total:
+          type: integer
+          example: 1
+        transacciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaccion'
