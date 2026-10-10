@@ -1,9 +1,12 @@
+
 require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
+// Importación de rutas
+const bancoCentralRoutes = require('./src/routes/bancoCentralRoutes');
 const clientesRoutes = require('./src/routes/clientesRoutes');
 const transaccionesRoutes = require('./src/routes/transaccionesRoutes');
 const reportesRoutes = require('./src/routes/reportesRoutes');
@@ -14,10 +17,17 @@ const PORT = Number(process.env.PORT) || 3002;
 const publicPath = path.join(__dirname, 'public');
 const indexPath = path.join(publicPath, 'index.html');
 
-// Middleware para recibir JSON
-app.use(express.json());
+// ==========================================
+// 1. MIDDLEWARES
+// ==========================================
 
-// Ruta de salud
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ==========================================
+// 2. RUTA DE SALUD
+// ==========================================
+
 app.get('/api/salud', (req, res) => {
     res.status(200).json({
         estado: 'OK',
@@ -26,12 +36,21 @@ app.get('/api/salud', (req, res) => {
     });
 });
 
-// Rutas de la API
+// ==========================================
+// 3. RUTAS DE LA API
+// ==========================================
+
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/transacciones', transaccionesRoutes);
 app.use('/api/reportes', reportesRoutes);
 
-// Archivos estáticos: HTML, CSS y JavaScript
+// Integración con el Banco Central
+app.use('/api/banco', bancoCentralRoutes);
+
+// ==========================================
+// 4. ARCHIVOS ESTÁTICOS
+// ==========================================
+
 app.use(express.static(publicPath));
 
 // Página principal
@@ -39,6 +58,7 @@ app.get('/', (req, res) => {
     res.sendFile(indexPath, (error) => {
         if (error && !res.headersSent) {
             console.error('Error al servir index.html:', error.message);
+
             res.status(500).json({
                 error: 'No se pudo cargar el panel de la sucursal'
             });
@@ -46,7 +66,10 @@ app.get('/', (req, res) => {
     });
 });
 
-// Ruta no encontrada
+// ==========================================
+// 5. RUTA NO ENCONTRADA
+// ==========================================
+
 app.use((req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({
@@ -57,7 +80,10 @@ app.use((req, res) => {
     res.status(404).send('Página no encontrada');
 });
 
-// Manejo de errores
+// ==========================================
+// 6. MANEJO DE ERRORES
+// ==========================================
+
 app.use((error, req, res, next) => {
     console.error('Error en Express:', error.message);
 
@@ -70,7 +96,10 @@ app.use((error, req, res, next) => {
     });
 });
 
-// Inicio local y exportación para Vercel
+// ==========================================
+// 7. INICIO DEL SERVIDOR
+// ==========================================
+
 if (require.main === module) {
     console.log('Iniciando Nodo 2 - Sucursal Bancaria...');
     console.log('Directorio público:', publicPath);
@@ -92,4 +121,5 @@ if (require.main === module) {
     });
 }
 
+// Exportación para Vercel
 module.exports = app;
