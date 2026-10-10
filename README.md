@@ -1,4 +1,5 @@
 # Nodo 2 — Sucursal Bancaria
+credencial de acceso:ac27439d0c1a68a1d9c22657601fe15c8eebf8a01c09038f1a2ee611ca6ad4e9
 
 Sistema administrativo de sucursal para el **Examen Práctico: Sistema Bancario Distribuido**. Esta aplicación está desarrollada con **Node.js y Express** y se comunica con el **Nodo 1 (Banco Central, Laravel)** para registrar cuentas, consultar saldos, ejecutar transferencias y obtener información administrativa real.
 
