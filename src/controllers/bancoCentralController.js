@@ -27,10 +27,6 @@ async function consultarSaldo(req, res) {
 
 async function crearCuenta(req, res) {
     try {
-
-        console.log('Content-Type:', req.headers['content-type']);
-        console.log('BODY RECIBIDO:', req.body);
-
         if (!req.body || typeof req.body !== 'object') {
             return res.status(400).json({
                 error: 'No se recibió un cuerpo JSON válido'
@@ -168,8 +164,118 @@ async function realizarTransferencia(req, res) {
 }
 
 
+/* ==========================================
+   HISTORIAL Y REPORTES REALES
+========================================== */
+
+// Obtener información de la sucursal
+async function obtenerSucursal(req, res) {
+    try {
+        const resultado = await bancoCentral.obtenerSucursal();
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al consultar sucursal:', error.message);
+        return res.status(error.status || 500).json({
+            error: error.message
+        });
+    }
+}
+
+// Consultar historial de la sucursal
+async function obtenerHistorialSucursal(req, res) {
+    try {
+        const resultado = await bancoCentral.obtenerHistorialSucursal(
+            req.query
+        );
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al consultar historial:', error.message);
+        return res.status(error.status || 500).json({
+            error: error.message
+        });
+    }
+}
+
+// Consultar historial por número de cuenta
+async function obtenerHistorialCuenta(req, res) {
+    try {
+        const { numeroCuenta } = req.params;
+
+        if (!/^\d{8,20}$/.test(numeroCuenta)) {
+            return res.status(400).json({
+                error: 'El número de cuenta debe contener entre 8 y 20 dígitos'
+            });
+        }
+
+        const resultado = await bancoCentral.obtenerHistorialCuenta(
+            numeroCuenta,
+            req.query
+        );
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al consultar historial de cuenta:', error.message);
+        return res.status(error.status || 500).json({
+            error: error.message
+        });
+    }
+}
+
+// Consultar reportes administrativos
+async function obtenerReporteSucursal(req, res) {
+    try {
+        const resultado = await bancoCentral.obtenerReporteSucursal(
+            req.query
+        );
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al consultar reporte:', error.message);
+        return res.status(error.status || 500).json({
+            error: error.message
+        });
+    }
+}
+
+// Buscar cuentas bancarias reales
+async function buscarCuentas(req, res) {
+    try {
+        const termino = req.query.q;
+
+        if (
+            typeof termino !== 'string' ||
+            !termino.trim() ||
+            termino.trim().length > 100
+        ) {
+            return res.status(400).json({
+                error: 'Ingresa un término de búsqueda válido (máximo 100 caracteres)'
+            });
+        }
+
+        const resultado = await bancoCentral.buscarCuentas(
+            termino.trim()
+        );
+
+        return res.status(200).json(resultado);
+
+    } catch (error) {
+        console.error('Error al buscar cuentas:', error.message);
+
+        return res.status(error.status || 500).json({
+            error: error.message
+        });
+    }
+}
+
+
 module.exports = {
     consultarSaldo,
     crearCuenta,
-    realizarTransferencia
+    realizarTransferencia,
+    obtenerSucursal,
+    obtenerHistorialSucursal,
+    obtenerHistorialCuenta,
+    obtenerReporteSucursal,
+    buscarCuentas
 };

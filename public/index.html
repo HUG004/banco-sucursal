@@ -8,40 +8,130 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/app.js" defer></script>
 </head>
+
 <body>
+
+    <!-- ENCABEZADO -->
     <header class="encabezado">
         <div class="contenedor">
             <h1>Sucursal Bancaria</h1>
             <p>Sistema Administrativo — Nodo 2</p>
-            <span class="etiqueta">Banco Central conectado — Operaciones reales</span>
+
+            <span class="etiqueta">
+                Banco Central conectado — Operaciones reales
+            </span>
         </div>
     </header>
 
     <main class="contenedor">
-        <section>
+
+        <!-- ======================================
+             ACCESO ADMINISTRATIVO
+        ======================================= -->
+        <section class="panel" id="panelAutenticacion">
+            <h2>Acceso administrativo</h2>
+
+            <p>
+                Inicia sesión para administrar cuentas bancarias
+                y consultar información del Banco Central.
+            </p>
+
+            <form id="formLogin">
+                <label for="claveAdministrador">
+                    Clave administrativa
+                </label>
+
+                <input
+                    type="password"
+                    id="claveAdministrador"
+                    name="claveAdministrador"
+                    required
+                    autocomplete="current-password"
+                    placeholder="Ingresa tu clave administrativa"
+                >
+
+                <button type="submit">
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <div id="panelSesion" hidden>
+                <p class="exito">
+                    Sesión administrativa activa.
+                </p>
+
+                <button id="botonCerrarSesion" type="button">
+                    Cerrar sesión
+                </button>
+            </div>
+
+            <p
+                id="mensajeLogin"
+                role="status"
+                aria-live="polite"
+            ></p>
+        </section>
+
+
+        <!-- ======================================
+             RESUMEN ADMINISTRATIVO REAL
+        ======================================= -->
+        <section class="panel" data-requiere-auth hidden>
             <h2>Resumen administrativo</h2>
+
+            <p>
+                Información real de la sucursal obtenida
+                del Banco Central mediante su API.
+            </p>
+
             <div class="estadisticas">
+
                 <article class="tarjeta">
-                    <h3>Clientes registrados</h3>
-                    <strong id="totalClientes">0</strong>
+                    <h3>Sucursal</h3>
+                    <strong id="totalClientes">—</strong>
                 </article>
+
                 <article class="tarjeta">
                     <h3>Transacciones</h3>
                     <strong id="totalTransacciones">0</strong>
                 </article>
+
                 <article class="tarjeta">
                     <h3>Total depósitos</h3>
                     <strong id="totalDepositos">$0.00</strong>
                 </article>
+
                 <article class="tarjeta">
                     <h3>Total retiros</h3>
                     <strong id="totalRetiros">$0.00</strong>
                 </article>
+
             </div>
+
+            <div class="estadisticas">
+                <article class="tarjeta">
+                    <h3>Monto total operado</h3>
+                    <strong id="montoTotalOperado">$0.00</strong>
+                </article>
+
+                <article class="tarjeta">
+                    <h3>Total transferencias</h3>
+                    <strong id="totalTransferencias">0</strong>
+                </article>
+
+                <article class="tarjeta">
+                    <h3>Monto de transferencias</h3>
+                    <strong id="montoTransferencias">$0.00</strong>
+                </article>
+            </div>
+
         </section>
 
-        
-        <section class="panel">
+
+        <!-- ======================================
+             REGISTRAR CUENTA EN BANCO CENTRAL
+        ======================================= -->
+        <section class="panel" data-requiere-auth hidden>
             <h2>Registrar cuenta en el Banco Central</h2>
 
             <p>
@@ -51,7 +141,10 @@
 
             <form id="formCliente">
 
-                <label for="numeroCuenta">Número de cuenta</label>
+                <label for="numeroCuenta">
+                    Número de cuenta
+                </label>
+
                 <input
                     type="text"
                     id="numeroCuenta"
@@ -63,7 +156,10 @@
                     placeholder="Ej. 10009002"
                 >
 
-                <label for="nombre">Nombre del titular</label>
+                <label for="nombre">
+                    Nombre del titular
+                </label>
+
                 <input
                     type="text"
                     id="nombre"
@@ -72,7 +168,10 @@
                     placeholder="Ej. Juan Pérez"
                 >
 
-                <label for="pin">PIN de seguridad</label>
+                <label for="pin">
+                    PIN de seguridad
+                </label>
+
                 <input
                     type="password"
                     id="pin"
@@ -83,7 +182,10 @@
                     placeholder="Entre 4 y 8 caracteres"
                 >
 
-                <label for="saldoInicial">Saldo inicial ($)</label>
+                <label for="saldoInicial">
+                    Saldo inicial ($)
+                </label>
+
                 <input
                     type="number"
                     id="saldoInicial"
@@ -97,14 +199,20 @@
                 <button type="submit">
                     Crear cuenta bancaria
                 </button>
-
             </form>
 
-            <p id="mensajeRegistro" role="status" aria-live="polite"></p>
+            <p
+                id="mensajeRegistro"
+                role="status"
+                aria-live="polite"
+            ></p>
         </section>
 
-        
-        <section class="panel">
+
+        <!-- ======================================
+             CONSULTAR SALDO REAL
+        ======================================= -->
+        <section class="panel" data-requiere-auth hidden>
             <h2>Consultar saldo bancario</h2>
 
             <p>
@@ -126,71 +234,187 @@
                     minlength="8"
                     maxlength="20"
                     required
-                    placeholder="Ej. 10009001"
+                    placeholder="Ej. 10009011"
                 >
 
                 <button type="submit">
                     Consultar saldo
                 </button>
-
             </form>
 
-            <div id="resultadoSaldo" role="status" aria-live="polite"></div>
+            <div
+                id="resultadoSaldo"
+                role="status"
+                aria-live="polite"
+            ></div>
         </section>
 
-
-        <section class="panel">
+        <!-- ======================================
+             HISTORIAL REAL DE LA SUCURSAL
+        ======================================= -->
+        <section class="panel" data-requiere-auth hidden>
             <div class="titulo-seccion">
-                <h2>Clientes registrados</h2>
-                <button id="actualizarClientes" type="button">
-                    Actualizar
-                </button>
+
+                <h2>Historial de transacciones de la sucursal</h2>
+
+                <select
+                    id="filtroTipo"
+                    aria-label="Filtrar transacciones"
+                >
+                    <option value="">Todas</option>
+                    <option value="deposit">Depósitos</option>
+                    <option value="withdrawal">Retiros</option>
+                    <option value="transfer">Transferencias</option>
+                </select>
+
             </div>
+
+            <p>
+                Historial real de operaciones de la sucursal,
+                obtenido del Banco Central.
+            </p>
+
             <div class="tabla-contenedor">
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Cuenta origen</th>
+                            <th>Cuenta destino</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tablaTransacciones"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- BUSCADOR DE CUENTAS REALES -->
+        <section class="panel" data-requiere-auth hidden>
+            <h2>Buscar cuentas bancarias</h2>
+
+            <p>
+                Consulta las cuentas registradas en el Banco Central
+                utilizando el nombre del titular o número de cuenta.
+            </p>
+
+            <form id="formBuscarCuentas">
+                <label for="terminoBusqueda">
+                    Nombre o número de cuenta
+                </label>
+
+                <input
+                    type="text"
+                    id="terminoBusqueda"
+                    placeholder="Ej. Cliente Prueba"
+                    maxlength="100"
+                    required
+                >
+
+                <button type="submit" id="botonBuscarCuentas">
+                    Buscar cuentas
+                </button>
+            </form>
+
+            <p id="mensajeBusqueda" role="status"></p>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
                             <th>Número de cuenta</th>
                             <th>Titular</th>
                             <th>Saldo</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaClientes"></tbody>
+
+                    <tbody id="tablaBusquedaCuentas"></tbody>
                 </table>
             </div>
         </section>
 
-        <section class="panel">
-            <div class="titulo-seccion">
-                <h2>Historial de transacciones</h2>
-                <select id="filtroTipo" aria-label="Filtrar transacciones">
-                    <option value="">Todas</option>
-                    <option value="deposito">Depósitos</option>
-                    <option value="retiro">Retiros</option>
-                    <option value="transferencia">Transferencias</option>
-                </select>
-            </div>
+        <!-- ======================================
+             HISTORIAL REAL POR CUENTA BANCARIA
+        ======================================= -->
+        <section class="panel" data-requiere-auth hidden>
+
+            <h2>Consultar historial por cuenta bancaria</h2>
+
+            <p>
+                Consulta las transacciones de una cuenta
+                registrada en el Banco Central.
+                Podrás visualizar depósitos, retiros y
+                transferencias asociados a esa cuenta.
+            </p>
+
+            <form id="formHistorialCuenta">
+
+                <label for="numeroCuentaHistorial">
+                    Número de cuenta bancaria
+                </label>
+
+                <input
+                    type="text"
+                    id="numeroCuentaHistorial"
+                    inputmode="numeric"
+                    pattern="[0-9]{8,20}"
+                    minlength="8"
+                    maxlength="20"
+                    required
+                    placeholder="Ej. 10009011"
+                >
+
+                <button type="submit">
+                    Consultar historial
+                </button>
+
+            </form>
+
+            <p
+                id="mensajeHistorialCuenta"
+                role="status"
+                aria-live="polite"
+            ></p>
+
+            <!-- INFORMACIÓN DE LA CUENTA -->
+            <div
+                id="informacionCuentaHistorial"
+                aria-live="polite"
+            ></div>
+
+            <!-- TABLA DE MOVIMIENTOS -->
             <div class="tabla-contenedor">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Cuenta</th>
-                            <th>Tipo</th>
-                            <th>Monto</th>
                             <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Monto</th>
+                            <th>Nodo</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaTransacciones"></tbody>
+
+                    <tbody id="tablaHistorialCuenta"></tbody>
                 </table>
             </div>
+
         </section>
+
     </main>
 
+
+    <!-- ======================================
+         PIE DE PÁGINA
+    ======================================= -->
     <footer>
         Sistema Bancario Distribuido — Examen Práctico
     </footer>
+
 </body>
 </html>

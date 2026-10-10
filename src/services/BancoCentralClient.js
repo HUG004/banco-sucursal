@@ -108,8 +108,114 @@ async function transferir(datosTransferencia, idempotencyKey = randomUUID()) {
     });
 }
 
+
+/* ==========================================
+   HISTORIAL Y REPORTES DEL BANCO CENTRAL
+========================================== */
+
+// Obtener información de la sucursal autenticada
+async function obtenerSucursal() {
+    return solicitarBancoCentral('/api/nodes/me');
+}
+
+// Consultar historial real de la sucursal
+async function obtenerHistorialSucursal(filtros = {}) {
+    const parametros = new URLSearchParams();
+
+    if (filtros.type) {
+        parametros.set('type', filtros.type);
+    }
+
+    if (filtros.from) {
+        parametros.set('from', filtros.from);
+    }
+
+    if (filtros.to) {
+        parametros.set('to', filtros.to);
+    }
+
+    if (filtros.limit) {
+        parametros.set('limit', String(filtros.limit));
+    }
+
+    const query = parametros.toString();
+
+    return solicitarBancoCentral(
+        '/api/nodes/me/transactions' +
+        (query ? `?${query}` : '')
+    );
+}
+
+// Consultar historial real por número de cuenta
+async function obtenerHistorialCuenta(numeroCuenta, filtros = {}) {
+    const parametros = new URLSearchParams();
+
+    if (filtros.type) {
+        parametros.set('type', filtros.type);
+    }
+
+    if (filtros.from) {
+        parametros.set('from', filtros.from);
+    }
+
+    if (filtros.to) {
+        parametros.set('to', filtros.to);
+    }
+
+    if (filtros.limit) {
+        parametros.set('limit', String(filtros.limit));
+    }
+
+    const query = parametros.toString();
+
+    return solicitarBancoCentral(
+        `/api/accounts/${encodeURIComponent(numeroCuenta)}/transactions` +
+        (query ? `?${query}` : '')
+    );
+}
+
+// Consultar reportes administrativos reales
+async function obtenerReporteSucursal(filtros = {}) {
+    const parametros = new URLSearchParams();
+
+    if (filtros.type) {
+        parametros.set('type', filtros.type);
+    }
+
+    if (filtros.from) {
+        parametros.set('from', filtros.from);
+    }
+
+    if (filtros.to) {
+        parametros.set('to', filtros.to);
+    }
+
+    const query = parametros.toString();
+
+    return solicitarBancoCentral(
+        '/api/nodes/me/reports' +
+        (query ? `?${query}` : '')
+    );
+}
+
+// Buscar cuentas reales en el Banco Central
+async function buscarCuentas(termino) {
+    const parametros = new URLSearchParams({
+        q: termino
+    });
+
+    return solicitarBancoCentral(
+        `/api/accounts/search?${parametros.toString()}`
+    );
+}
+
 module.exports = {
     abrirCuenta,
     consultarSaldo,
-    transferir
+    transferir,
+    obtenerSucursal,
+    obtenerHistorialSucursal,
+    obtenerHistorialCuenta,
+    obtenerReporteSucursal,
+    buscarCuentas
 };

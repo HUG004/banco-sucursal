@@ -2,14 +2,13 @@
 require('dotenv').config();
 
 const express = require('express');
+const cookieParser = require('cookie-parser');
+const authRoutes = require('./src/routes/authRoutes');
 const path = require('path');
 const fs = require('fs');
 
 // Importación de rutas
 const bancoCentralRoutes = require('./src/routes/bancoCentralRoutes');
-const clientesRoutes = require('./src/routes/clientesRoutes');
-const transaccionesRoutes = require('./src/routes/transaccionesRoutes');
-const reportesRoutes = require('./src/routes/reportesRoutes');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3002;
@@ -23,6 +22,7 @@ const indexPath = path.join(publicPath, 'index.html');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // ==========================================
 // 2. RUTA DE SALUD
@@ -40,9 +40,8 @@ app.get('/api/salud', (req, res) => {
 // 3. RUTAS DE LA API
 // ==========================================
 
-app.use('/api/clientes', clientesRoutes);
-app.use('/api/transacciones', transaccionesRoutes);
-app.use('/api/reportes', reportesRoutes);
+// Autenticación administrativa
+app.use('/api/auth', authRoutes);
 
 // Integración con el Banco Central
 app.use('/api/banco', bancoCentralRoutes);
