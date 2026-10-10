@@ -11,6 +11,9 @@ const fs = require('fs');
 const bancoCentralRoutes = require('./src/routes/bancoCentralRoutes');
 
 const app = express();
+if (process.env.VERCEL === '1') {
+    app.set('trust proxy', 1);
+}
 const PORT = Number(process.env.PORT) || 3002;
 
 const publicPath = path.join(__dirname, 'public');
