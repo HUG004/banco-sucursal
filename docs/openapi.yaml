@@ -1,325 +1,231 @@
 openapi: 3.0.3
 info:
-  title: API de Sucursal Bancaria - Nodo 2
-  version: 0.1.0
+  title: API de Sucursal Bancaria — Nodo 2
+  version: 1.0.0
   description: |
-    API REST del Nodo 2 del Sistema Bancario Distribuido.
-    Esta versión utiliza datos simulados en memoria y no está conectada al Banco Central.
-    Los clientes se pierden al reiniciar el servidor. El historial de ejemplo se carga
-    independientemente del registro de clientes; no representa un libro contable real.
-    La autenticación por API Key y la integración con el Banco Central están pendientes.
+    API REST Express del Nodo 2. Las operaciones bancarias se delegan al
+    Banco Central (Laravel) mediante una API Key del servidor.
+    Las rutas /api/banco requieren autorización administrativa de sucursal.
+    La forma exacta de ciertos cuerpos y respuestas bancarias depende del
+    controlador del Nodo 2 y del contrato del Banco Central.
 servers:
+  - url: https://banco-sucursal-five.vercel.app
+    description: Producción
   - url: http://localhost:3002
-    description: Servidor local de desarrollo
-
+    description: Desarrollo local
 tags:
   - name: Salud
-  - name: Clientes
-  - name: Transacciones
-  - name: Reportes
+  - name: Autenticación
+  - name: Cuentas
+  - name: Transferencias
+  - name: Sucursal
 paths:
   /api/salud:
     get:
       tags: [Salud]
-      summary: Verificar estado del servidor
-      operationId: obtenerSalud
+      summary: Comprobar estado del servidor
       responses:
         '200':
-          description: Servidor operativo
+          description: Servidor disponible
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Salud'
-  /api/clientes:
-    get:
-      tags: [Clientes]
-      summary: Listar clientes registrados en memoria
-      operationId: listarClientes
-      responses:
-        '200':
-          description: Lista de clientes
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cliente'
+                type: object
+                properties:
+                  estado: {type: string, example: OK}
+                  servicio: {type: string, example: 'Nodo 2 - Sucursal Bancaria'}
+                  mensaje: {type: string}
+  /api/auth/login:
     post:
-      tags: [Clientes]
-      summary: Registrar un cliente simulado
-      operationId: registrarCliente
+      tags: [Autenticación]
+      summary: Iniciar sesión administrativa
+      description: Requiere encabezado Origin del mismo sitio. Establece cookie HttpOnly.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CrearCliente'
-            example:
-              nombre: Cliente de Prueba
-              saldoInicial: 1000
+              type: object
+              required: [clave]
+              properties:
+                clave: {type: string, format: password}
       responses:
-        '201':
-          description: Cliente creado
+        '200': {description: Sesión iniciada; se establece cookie de sesión}
+        '401': {description: Credenciales incorrectas}
+        '403': {description: Origen no autorizado}
+        '503': {description: Autenticación no configurada}
+  /api/auth/estado:
+    get:
+      tags: [Autenticación]
+      summary: Consultar estado de la sesión
+      responses:
+        '200':
+          description: Estado de autenticación
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RegistroClienteExitoso'
-        '400':
-          $ref: '#/components/responses/Error400'
-  /api/clientes/{id}:
+                type: object
+                properties:
+                  autenticado: {type: boolean}
+  /api/auth/logout:
+    post:
+      tags: [Autenticación]
+      summary: Cerrar sesión administrativa
+      description: Requiere encabezado Origin del mismo sitio.
+      responses:
+        '200': {description: Sesión cerrada}
+        '403': {description: Origen no autorizado}
+  /api/banco/cuentas:
+    post:
+      tags: [Cuentas]
+      summary: Crear cuenta en el Banco Central
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
+      description: El cuerpo se valida en el controlador y se remite a POST /api/accounts del Banco Central.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Datos de apertura definidos por el contrato del Banco Central.
+      responses:
+        '200': {description: Respuesta del controlador / Banco Central}
+        '201': {description: Cuenta creada}
+        '400': {description: Solicitud inválida}
+        '401': {description: Sin autorización}
+        '422': {description: Error de validación}
+        '503': {description: Banco Central no disponible}
+  /api/banco/saldo/{numeroCuenta}:
     get:
-      tags: [Clientes]
-      summary: Obtener cliente por identificador
-      operationId: obtenerClientePorId
+      tags: [Cuentas]
+      summary: Consultar saldo de cuenta
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
       parameters:
-        - $ref: '#/components/parameters/ClienteId'
+        - $ref: '#/components/parameters/numeroCuenta'
       responses:
-        '200':
-          description: Cliente encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cliente'
-        '404':
-          $ref: '#/components/responses/Error404'
-  /api/transacciones:
-    get:
-      tags: [Transacciones]
-      summary: Listar transacciones simuladas
-      operationId: listarTransacciones
+        '200': {description: Saldo obtenido del Banco Central}
+        '401': {description: Sin autorización}
+        '404': {description: Cuenta no encontrada}
+  /api/banco/transferencias:
+    post:
+      tags: [Transferencias]
+      summary: Realizar transferencia bancaria
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
+      description: Operación delegada a POST /api/transfer del Banco Central; el servicio utiliza clave de idempotencia.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Campos de transferencia definidos por el controlador y el Banco Central.
       responses:
-        '200':
-          description: Lista de transacciones
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaccion'
-  /api/transacciones/cliente/{id}:
+        '200': {description: Resultado de la transferencia}
+        '201': {description: Transferencia registrada}
+        '400': {description: Solicitud inválida}
+        '401': {description: Sin autorización}
+        '422': {description: Error de validación}
+        '503': {description: Banco Central no disponible}
+  /api/banco/sucursal:
     get:
-      tags: [Transacciones]
-      summary: Consultar historial por cliente
-      operationId: obtenerHistorialCliente
+      tags: [Sucursal]
+      summary: Consultar datos de la sucursal autenticada
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
+      responses:
+        '200': {description: Datos de la sucursal desde /api/nodes/me}
+        '401': {description: Sin autorización}
+  /api/banco/sucursal/transacciones:
+    get:
+      tags: [Sucursal]
+      summary: Consultar transacciones atribuidas a la sucursal
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
       parameters:
-        - $ref: '#/components/parameters/ClienteId'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/limit'
       responses:
-        '200':
-          description: Historial del cliente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HistorialCliente'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '404':
-          $ref: '#/components/responses/Error404'
-  /api/reportes/resumen:
+        '200': {description: Historial de transacciones de la sucursal}
+        '401': {description: Sin autorización}
+  /api/banco/cuentas/{numeroCuenta}/transacciones:
     get:
-      tags: [Reportes]
-      summary: Obtener resumen administrativo simulado
-      operationId: obtenerResumen
-      responses:
-        '200':
-          description: Estadísticas de la sucursal
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Resumen'
-  /api/reportes/transacciones:
-    get:
-      tags: [Reportes]
-      summary: Reporte de transacciones con filtro opcional
-      operationId: reporteTransacciones
+      tags: [Cuentas]
+      summary: Consultar historial de una cuenta
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
       parameters:
-        - in: query
-          name: tipo
-          required: false
-          schema:
-            type: string
-            enum: [deposito, retiro, transferencia]
-          description: Filtra por tipo de transacción
+        - $ref: '#/components/parameters/numeroCuenta'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/limit'
       responses:
-        '200':
-          description: Reporte generado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReporteTransacciones'
-        '400':
-          $ref: '#/components/responses/Error400'
+        '200': {description: Historial de la cuenta}
+        '401': {description: Sin autorización}
+        '404': {description: Cuenta no encontrada}
+  /api/banco/sucursal/reportes:
+    get:
+      tags: [Sucursal]
+      summary: Consultar reportes administrativos reales
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
+      parameters:
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+      responses:
+        '200': {description: Reporte del Banco Central para la sucursal}
+        '401': {description: Sin autorización}
+  /api/banco/cuentas/buscar:
+    get:
+      tags: [Cuentas]
+      summary: Buscar cuentas en el Banco Central
+      security: [{sesionSucursal: []}, {claveSucursal: []}]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: {type: string}
+          description: Término de búsqueda
+      responses:
+        '200': {description: Resultado de búsqueda de cuentas}
+        '401': {description: Sin autorización}
 components:
+  securitySchemes:
+    sesionSucursal:
+      type: apiKey
+      in: cookie
+      name: sucursal_session
+      description: Cookie firmada emitida por POST /api/auth/login.
+    claveSucursal:
+      type: apiKey
+      in: header
+      name: X-Sucursal-Key
+      description: Clave administrativa admitida por el middleware del Nodo 2; no confundir con X-API-Key del Banco Central.
   parameters:
-    ClienteId:
+    numeroCuenta:
+      name: numeroCuenta
       in: path
-      name: id
       required: true
-      description: Identificador numérico del cliente
-      schema:
-        type: integer
-        minimum: 1
-      example: 1
-  responses:
-    Error400:
-      description: Datos o parámetros inválidos
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Error404:
-      description: Cliente no encontrado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Cliente no encontrado
-  schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: string
-    Salud:
-      type: object
-      properties:
-        estado:
-          type: string
-          example: OK
-        servicio:
-          type: string
-          example: Nodo 2 - Sucursal Bancaria
-        mensaje:
-          type: string
-          example: Servidor funcionando correctamente
-    CrearCliente:
-      type: object
-      required: [nombre, saldoInicial]
-      properties:
-        nombre:
-          type: string
-          minLength: 1
-          example: Cliente de Prueba
-        saldoInicial:
-          type: number
-          format: double
-          minimum: 0
-          example: 1000
-    Cliente:
-      type: object
-      required: [id, numeroCuenta, nombre, saldo, estado]
-      properties:
-        id:
-          type: integer
-          example: 1
-        numeroCuenta:
-          type: string
-          example: CTA-0001
-        nombre:
-          type: string
-          example: Cliente de Prueba
-        saldo:
-          type: number
-          format: double
-          example: 1000
-        estado:
-          type: string
-          example: activa
-    RegistroClienteExitoso:
-      type: object
-      properties:
-        mensaje:
-          type: string
-          example: Cliente registrado correctamente (simulación)
-        cliente:
-          $ref: '#/components/schemas/Cliente'
-    Transaccion:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        cuentaId:
-          type: integer
-          example: 1
-        tipo:
-          type: string
-          enum: [deposito, retiro, transferencia]
-          example: deposito
-        monto:
-          type: number
-          format: double
-          example: 1000
-        sucursalId:
-          type: integer
-          example: 1
-        fecha:
-          type: string
-          format: date-time
-          example: '2026-10-09T18:36:00.340Z'
-        descripcion:
-          type: string
-          example: Apertura de cuenta (simulación)
-    HistorialCliente:
-      type: object
-      properties:
-        cliente:
-          type: string
-          example: Cliente de Prueba
-        numeroCuenta:
-          type: string
-          example: CTA-0001
-        totalTransacciones:
-          type: integer
-          example: 1
-        transacciones:
-          type: array
-          items:
-            $ref: '#/components/schemas/Transaccion'
-    Resumen:
-      type: object
-      properties:
-        sucursal:
-          type: string
-          example: Sucursal Bancaria - Nodo 2
-        modo:
-          type: string
-          example: simulacion
-        totalClientes:
-          type: integer
-          example: 1
-        totalTransacciones:
-          type: integer
-          example: 1
-        cantidadDepositos:
-          type: integer
-          example: 1
-        cantidadRetiros:
-          type: integer
-          example: 0
-        totalDepositos:
-          type: number
-          example: 1000
-        totalRetiros:
-          type: number
-          example: 0
-        fechaReporte:
-          type: string
-          format: date-time
-    ReporteTransacciones:
-      type: object
-      properties:
-        sucursal:
-          type: string
-          example: Sucursal Bancaria - Nodo 2
-        modo:
-          type: string
-          example: simulacion
-        total:
-          type: integer
-          example: 1
-        transacciones:
-          type: array
-          items:
-            $ref: '#/components/schemas/Transaccion'
+      schema: {type: string}
+      description: Número de cuenta bancaria
+    type:
+      name: type
+      in: query
+      required: false
+      schema: {type: string, enum: [deposit, withdrawal, transfer]}
+    from:
+      name: from
+      in: query
+      required: false
+      schema: {type: string, format: date}
+    to:
+      name: to
+      in: query
+      required: false
+      schema: {type: string, format: date}
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema: {type: integer, minimum: 1}
